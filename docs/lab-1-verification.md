@@ -20,6 +20,8 @@ Windows 11 Pro 10.0.26200, около 32 ГиБ RAM, NVIDIA GeForce RTX 5070 12 
 | Frontend tests | 8 suites / 15 tests passed, Linux Node 22 |
 | Production-сборки трёх компонентов | Успешно, включая Spring bootJar и React build |
 | Backend CI | [45075320253](https://github.com/dmice9/Autonotes/actions/runs/45075320253), success; Gradle build включает тесты, SpotBugs, Spotless и порог JaCoCo |
+| Backend локально в Linux-контейнере | 27 suites / 88 tests, 0 failures/errors/skipped; Gradle build success, 12 мин 18 с |
+| JaCoCo локально | Instructions 88,67%, lines 88,53%, branches 72,35%; настроенная проверка порога прошла |
 | Frontend CI | [45074806033](https://github.com/dmice9/Autonotes/actions/runs/45074806033), success |
 | ML CI | [45074806060](https://github.com/dmice9/Autonotes/actions/runs/45074806060), success |
 | Реальная обработка изображения | 23.11.2026 01:04 МСК: COMPLETED за 18,19 с после загрузки; OCR и summary получены |
@@ -40,6 +42,8 @@ OCR тестового изображения передал исходный т
 - Первый pull Logstash оборвался EOF; добавлены три ограниченных попытки скачивания с сохранением кэша.
 - Filebeat healthcheck не использовал флаг, необходимый для Windows bind mount: исправлено, [#6](https://github.com/dmice9/Autonotes/issues/6).
 - В PowerShell 5.1 `$PSScriptRoot` недоступен в выражениях значений параметров на этом пути вызова: вычисление путей smoke перенесено после param; затем полный сценарий прошёл.
+- Одноразовый `kibana-init` с кодом 0 несовместим с ожиданием постоянно работающих сервисов `compose up --wait`; сценарий ожидает сервисы и отдельно запускает инициализацию.
+- BOM в первой строке `.env.example` мешает фильтрации комментариев при экспорте в GitHub Actions; шаблон сохранён как UTF-8 без BOM.
 
 ## Независимая проверка
 
