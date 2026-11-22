@@ -37,6 +37,13 @@ try {
     $probe = "from ml.settings import get_settings; import httpx; s=get_settings(); r=httpx.get(s.ollama_base_url+'/api/tags',timeout=20); r.raise_for_status(); names={m['name'] for m in r.json().get('models',[])}; required={s.ollama_model,s.ollama_fallback_model}-{None,''}; missing=required-names; print('Ollama models:',sorted(names)); assert not missing, 'Pull missing models: '+str(sorted(missing))"
     & docker compose --project-name $ProjectName run --rm --no-deps -T ml python -c $probe
     if ($LASTEXITCODE -ne 0) { throw 'ML container cannot use Ollama. Check URL, model names and network access.' }
+    for ($attempt = 1; $attempt -le 3; $attempt++) {
+        & docker compose --project-name $ProjectName pull --ignore-buildable
+        if ($LASTEXITCODE -eq 0) { break }
+        if ($attempt -eq 3) { throw 'Infrastructure image download failed after three attempts.' }
+        Write-Warning "Registry download failed (attempt $attempt/3); retrying in five seconds."
+        Start-Sleep -Seconds 5
+    }
     & docker compose --project-name $ProjectName up -d --wait --wait-timeout $WaitTimeoutSec
     if ($LASTEXITCODE -ne 0) { throw "Startup failed. Inspect: docker compose --project-name $ProjectName logs --tail 100" }
     Write-Host 'Started. Open http://localhost:3000 and run scripts/smoke.ps1.'

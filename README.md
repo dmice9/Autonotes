@@ -21,7 +21,7 @@ React SPA → Nginx → Spring Boot API. PostgreSQL хранит пользов�
 
 ### Подготовка среды
 
-Нужны Git, Windows PowerShell 5.1 или PowerShell 7, работающий Docker Desktop с Linux-контейнерами и Compose v2+. Для основного сценария нужны Ollama и загруженная vision-модель. Java, Node и Python на хост для Docker-запуска не требуются.
+Нужны Git, Windows PowerShell 5.1 или PowerShell 7, работающий Docker Desktop с Linux-контейнерами и Compose v2+. Для основного сценария нужны Ollama и загруженная vision-модель. Подготовленный MinIO-образ рассчитан на amd64. Java, Node и Python на хост для Docker-запуска не требуются.
 
 Подготовка выполняется один раз до запуска из клона. В проверяемой среде: Windows, около 32 ГиБ RAM, RTX 5070 12 ГиБ VRAM. Это описание машины проверки, а не установленный минимальный порог. Полный стек скачивает несколько гигабайт образов, модель 3b — около 3,2 ГБ. Оставьте запас диска и памяти. CPU-режим возможен, но отдельно не подтверждён и может быть медленным.
 
@@ -100,7 +100,7 @@ docker compose --project-name autonotes down
 | Ollama / модель | 0.40.17 / qwen2.5vl:3b |
 | Docker / Compose машины проверки | 29.9.3 / v5.7.0 |
 
-Базовые образы зафиксированы в Dockerfile, инфраструктурные — в Compose. Конкретные результаты и ограничения приведены в протоколе; поддержка других версий без проверки не заявляется.
+Базовые и инфраструктурные образы закреплены manifest digest; перечень — `docs/runtime-images.lock.json`. MinIO собирается из официального бинарного релиза с SHA-256 — [источник и лицензия компонента](infrastructure/minio/README.md). Конкретные результаты и ограничения приведены в протоколе; поддержка других версий без проверки не заявляется.
 
 ### Протокол повторного запуска
 
@@ -110,7 +110,7 @@ docker compose --project-name autonotes down
 
 В подготовленной среде соответствующего компонента:
 
-- Backend: `cd backend`, затем `./gradlew build` (Windows: `gradlew.bat build`); интеграционные тесты требуют Docker.
+- Backend: предварительно собрать MinIO по `infrastructure/minio/README.md`; затем `cd backend` и `./gradlew build` (Windows: `gradlew.bat build`); интеграционные тесты требуют Docker.
 - Frontend: `cd frontend`, `npm ci`, `npm test -- --watchAll=false`, `npm run build`.
 - ML: `python -m pip install -r ml/requirements.txt`, `python -m pytest ml/tests -q`.
 
