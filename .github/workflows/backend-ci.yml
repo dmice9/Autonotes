@@ -28,5 +28,8 @@ jobs:
           build-root-directory: backend
       - name: Make gradlew executable
         run: chmod +x ./gradlew
+      - name: Build reproducible MinIO test image
+        working-directory: .
+        run: docker build -t autonotes-minio:RELEASE.2025-09-07T16-13-09Z infrastructure/minio
       - name: Build and Test
         run: ./gradlew build

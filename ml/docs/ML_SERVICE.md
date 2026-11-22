@@ -6,7 +6,7 @@
 
 1. **Ollama** на хосте с GPU:
    ```bash
-   ollama pull qwen2.5vl:7b
+   ollama pull qwen2.5vl:3b
    ollama serve
    ```
 
@@ -18,10 +18,11 @@
 
 | Переменная | Описание | По умолчанию |
 |------------|----------|--------------|
-| `OLLAMA_BASE_URL` | URL Ollama API | `http://localhost:11434` |
-| `OLLAMA_MODEL` | Модель | `qwen2.5vl:7b` |
+| `OLLAMA_BASE_URL` | URL Ollama API из Docker (`.env.example`) | `http://host.docker.internal:11434` |
+| `OLLAMA_MODEL` | Модель в `.env.example` | `qwen2.5vl:3b` |
+| `OLLAMA_FALLBACK_MODEL` | Резервная модель; совпадение отключает переключение | `qwen2.5vl:3b` |
 | `OLLAMA_TIMEOUT_SEC` | Таймаут запроса (сек) | `300` |
-| `OLLAMA_MULTI_IMAGE_MODE` | `batch` или `sequential` | `batch` |
+| `OLLAMA_MULTI_IMAGE_MODE` | `batch` или `sequential` | `sequential` |
 | `RABBITMQ_HOST` | Хост RabbitMQ | `rabbitmq` (в Docker) |
 | `MINIO_ENDPOINT` | URL MinIO | `http://minio:9000` |
 | `MINIO_BUCKET` | Bucket с изображениями | `lecture-notes` |

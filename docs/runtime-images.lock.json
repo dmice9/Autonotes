@@ -1,0 +1,23 @@
+{
+  "resolvedOn": "2026-11-23",
+  "images": {
+    "curlimages/curl:8.8.0": "sha256:73e4d532ea62d7505c5865b517d3704966ffe916609bedc22af6833dc9969bcd",
+    "debian:bookworm-slim": "sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc",
+    "docker.elastic.co/beats/filebeat:8.15.0": "sha256:c2cb458cba1eff0536639f7f101d8ddf570a4cf1973ed79d95db243077a39e7c",
+    "docker.elastic.co/elasticsearch/elasticsearch:8.15.0": "sha256:84a73ced8390c059e7bc2858595c68dc36e6f8bdb98895dcab0074eda35ac96e",
+    "docker.elastic.co/kibana/kibana:8.15.0": "sha256:ff5f6b9a49f410658b74b337b102c302bbeb52b470efe1f0e3af3c7526fbe0e7",
+    "docker.elastic.co/logstash/logstash:8.15.0": "sha256:73a30fb57f305c0a6e0018ef37aeda016b5a3578a95530af13579382938cc3d6",
+    "eclipse-temurin:24-jdk-noble": "sha256:dacac8e9a0df0d2bd24e702b4431132875c249930b70555ebd7ca285b5bee684",
+    "eclipse-temurin:24-jre-noble": "sha256:b416d02335e702b0403ff280de9475a3348e29382285969c9d4e17862ce632e7",
+    "grafana/grafana:11.1.0": "sha256:079600c9517b678c10cda6006b4487d3174512fd4c6cface37df7822756ed7a5",
+    "jaegertracing/all-in-one:1.60.0": "sha256:4fd2d70fa347d6a47e79fcb06b1c177e6079f92cba88b083153d56263082135e",
+    "nginx/nginx-prometheus-exporter:1.3.0": "sha256:6477cf3bddc4e042d3496856fb2e8e382301bac47fb18cb83924389717261cb1",
+    "nginx:1.27-alpine": "sha256:65645c7bb6a0661892a8b03b89d0743208a18dd2f3f17a54ef4b76fb8e2f2a10",
+    "nginx:alpine": "sha256:fb4658584bd9a916ffb6f6e365f97c25cfdb2923801f551ea08356e695f14ff7",
+    "node:22-alpine": "sha256:1314fb30ec37592d5845e5a160d522c0e680972aa534549940b8d73bde88481a",
+    "postgres:16-alpine": "sha256:f2f98726820d0342055351c6e9d36e705f5bfffb3dd53ff556325114b08afb6d",
+    "prom/prometheus:v2.53.3": "sha256:c62e2f333beae2fdac8c3c7a3daaa7ac81110023cbc5857b0ec541f09d997951",
+    "python:3.12-slim": "sha256:5e2bdb1b0d542d5039cffb8181c65930093949194a65c365dfb1b0fe13a4fa5b",
+    "rabbitmq:3.13-management-alpine": "sha256:606d8c0d6b3c18d1da9afc53bc7cdb2a8d5486df91b5a9830e9e07626c9ae281"
+  }
+}

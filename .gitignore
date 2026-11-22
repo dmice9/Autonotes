@@ -44,3 +44,5 @@ yarn-error.log*
 **/venv/
 **/.pytest_cache/
 temp-test.jpg
+.venv/
+artifacts/

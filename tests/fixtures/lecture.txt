@@ -1,0 +1,7 @@
+DATABASE TRANSACTIONS
+A transaction groups several database operations.
+Atomicity means all operations succeed or none do.
+Consistency preserves the rules of the database.
+Isolation separates concurrent transactions.
+Durability keeps committed changes after restart.
+COMMIT saves changes. ROLLBACK cancels changes.
