@@ -44,7 +44,12 @@ try {
         Write-Warning "Registry download failed (attempt $attempt/3); retrying in five seconds."
         Start-Sleep -Seconds 5
     }
-    & docker compose --project-name $ProjectName up -d --wait --wait-timeout $WaitTimeoutSec
+    # kibana-init is a successful one-shot task, not a long-running service.
+    $services = @(& docker compose --project-name $ProjectName config --services | Where-Object { $_ -ne 'kibana-init' })
+    if ($LASTEXITCODE -ne 0 -or $services.Count -eq 0) { throw 'Cannot enumerate Compose services.' }
+    & docker compose --project-name $ProjectName up -d --wait --wait-timeout $WaitTimeoutSec @services
     if ($LASTEXITCODE -ne 0) { throw "Startup failed. Inspect: docker compose --project-name $ProjectName logs --tail 100" }
+    & docker compose --project-name $ProjectName run --rm --no-deps -T kibana-init
+    if ($LASTEXITCODE -ne 0) { throw 'Services are ready, but Kibana initialization failed.' }
     Write-Host 'Started. Open http://localhost:3000 and run scripts/smoke.ps1.'
 } finally { Pop-Location }
