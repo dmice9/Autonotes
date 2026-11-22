@@ -1,11 +1,14 @@
 ﻿[CmdletBinding()]
 param(
     [uri]$BaseUrl = 'http://localhost:8090',
-    [string]$ImagePath = (Join-Path (Split-Path $PSScriptRoot -Parent) 'tests/fixtures/lecture.png'),
+    [string]$ImagePath,
     [ValidateRange(10, 1800)][int]$TimeoutSec = 600,
-    [string]$ReportPath = (Join-Path (Split-Path $PSScriptRoot -Parent) 'artifacts/lab-1/smoke.json')
+    [string]$ReportPath
 )
 $ErrorActionPreference = 'Stop'
+$repoRoot = Split-Path $PSScriptRoot -Parent
+if (-not $ImagePath) { $ImagePath = Join-Path $repoRoot 'tests/fixtures/lecture.png' }
+if (-not $ReportPath) { $ReportPath = Join-Path $repoRoot 'artifacts/lab-1/smoke.json' }
 Add-Type -AssemblyName System.Net.Http
 $client = [System.Net.Http.HttpClient]::new()
 $client.Timeout = [TimeSpan]::FromSeconds(40)

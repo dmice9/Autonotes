@@ -172,6 +172,8 @@ PostgreSQL хранит учётные записи, метаданные и р�
 | [#3 Зависимости](https://github.com/dmice9/Autonotes/issues/3) | Фиксация Python и проверка целевой среды |
 | [#4 Ollama](https://github.com/dmice9/Autonotes/issues/4) | Единая конфигурация и реальная обработка |
 | [#5 MinIO](https://github.com/dmice9/Autonotes/issues/5) | Недоступность исходного образа и воспроизводимая замена |
+| [#6 Filebeat](https://github.com/dmice9/Autonotes/issues/6) | Исправление healthcheck на Windows bind mount |
+| [#7 Качество summary](https://github.com/dmice9/Autonotes/issues/7) | Подтверждённое искажение терминов моделью 3b; открыто |
 
 Дополнительно обнаружены CRLF после Windows checkout, несовместимые с проверкой Spotless, и сетевые сбои реестров (Maven HTTP 429, Logstash EOF). Добавлено правило LF; сетевые повторы ограничены и не скрывают итоговую ошибку.
 

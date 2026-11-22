@@ -226,7 +226,7 @@ services:
       logstash:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "filebeat test output -e | grep -q 'Connection to backoff(async(tcp://logstash:5044)) established'"]
+      test: ["CMD-SHELL", "filebeat test output -e --strict.perms=false >/dev/null 2>&1"]
       interval: 30s
       timeout: 15s
       retries: 6

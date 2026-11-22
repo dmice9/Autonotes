@@ -4,7 +4,7 @@
 
 ## Среда
 
-Windows, около 32 ГиБ RAM, NVIDIA GeForce RTX 5070 12 ГиБ VRAM, драйвер 621.14. Git 2.56.0.windows.4; Docker Engine/CLI 29.9.3; Compose v5.7.0. Python локально 3.13.14; контейнер ML использует 3.12. Ollama: официальный контейнер 0.40.17, модель `qwen2.5vl:3b`.
+Windows 11 Pro 10.0.26200, около 32 ГиБ RAM, NVIDIA GeForce RTX 5070 12 ГиБ VRAM, драйвер 621.14. Docker VM доступно около 15,45 ГиБ RAM. Git 2.56.0.windows.4; Docker Engine/CLI 29.9.3; Compose v5.7.0. Python локально 3.13.14; контейнер ML использует 3.12. Ollama: официальный контейнер 0.40.17, модель `qwen2.5vl:3b`, использование 100% GPU подтверждено `ollama ps`. Digest модели и образов — в `runtime-images.lock.json`.
 
 ## Подтверждённые результаты
 
@@ -16,8 +16,30 @@ Windows, около 32 ГиБ RAM, NVIDIA GeForce RTX 5070 12 ГиБ VRAM, др�
 | pip check локальной среды | No broken requirements found |
 | PowerShell parser | Оба сценария без синтаксических ошибок |
 | Compose config | Успешно |
+| ML unit tests, Linux Python 3.12 | 23 passed в собранном контейнере |
+| Frontend tests | 8 suites / 15 tests passed, Linux Node 22 |
+| Production-сборки трёх компонентов | Успешно, включая Spring bootJar и React build |
+| Backend CI | [45075320253](https://github.com/dmice9/Autonotes/actions/runs/45075320253), success; Gradle build включает тесты, SpotBugs, Spotless и порог JaCoCo |
+| Frontend CI | [45074806033](https://github.com/dmice9/Autonotes/actions/runs/45074806033), success |
+| ML CI | [45074806060](https://github.com/dmice9/Autonotes/actions/runs/45074806060), success |
+| Реальная обработка изображения | 23.11.2026 01:04 МСК: COMPLETED за 18,19 с после загрузки; OCR и summary получены |
+| E2E API | 11 проверок PASS: readiness, system info, register, login, отказ без токена, профиль, upload, OCR/summary, список, отказ другому пользователю, удаление |
+| Filebeat после исправления | Проверка соединения с Logstash проходит, health становится healthy |
 
-Результаты сборок и полного сценария будут добавлены после завершения фактических запусков. Наличие строки о проверке не означает её прохождение без результата.
+[Сохранённый E2E-результат без токенов и паролей](evidence/lab-1-e2e.json). Время обработки не включает предварительное скачивание и прогрев модели и не является гарантией производительности на других изображениях.
+
+### Качество результата
+
+OCR тестового изображения передал исходный текст. Summary сформировано, но Consistency переведено как «Синхронизация», Durability как «Дисперсность». Это подтверждённая проблема [#7](https://github.com/dmice9/Autonotes/issues/7), которая остаётся открытой. Успех E2E означает работоспособность pipeline и проверок доступа, а не семантическую точность модели. Критерии качества будут определяться в ЛР № 2.
+
+### Проблемы среды и исправления
+
+- Исходный образ MinIO недоступен: официальный бинарный релиз упакован локально с проверкой SHA-256, [#5](https://github.com/dmice9/Autonotes/issues/5).
+- Первый cloud backend-запуск остановился на HTTP 429 Maven Central; последующий запуск прошёл без отключения проверок.
+- Первый локальный Gradle check остановился на CRLF после Windows checkout; добавлено правило LF, изменение Java отформатировано Spotless.
+- Первый pull Logstash оборвался EOF; добавлены три ограниченных попытки скачивания с сохранением кэша.
+- Filebeat healthcheck не использовал флаг, необходимый для Windows bind mount: исправлено, [#6](https://github.com/dmice9/Autonotes/issues/6).
+- В PowerShell 5.1 `$PSScriptRoot` недоступен в выражениях значений параметров на этом пути вызова: вычисление путей smoke перенесено после param; затем полный сценарий прошёл.
 
 ## Независимая проверка
 
