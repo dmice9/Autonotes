@@ -1,118 +1,140 @@
-﻿# Autonotes
+# Autonotes
 
-**Autonotes** — интеллектуальная платформа для автоматического создания структурированных конспектов из фотографий лекционных досок.
+Autonotes создаёт конспекты из фотографий лекционных материалов: сохраняет изображения, распознаёт текст и формирует краткое содержание через Ollama. Это собственный проект команды БПИ2304; командная копия технически является форком IWKMS99/Autonotes.
 
-Проект построен на микросервисной архитектуре с использованием паттернов надежности данных (Transactional Outbox) и асинхронного взаимодействия.
+**Статус ЛР № 1:** подготовка в ветке `lab-1`. Лицензия и согласование преподавателя пока открыты. Готовность к сдаче определяется [контрольным списком](docs/lab-1-submission.md), а результаты запуска — [протоколом](docs/lab-1-verification.md). ЛР № 2 ещё не выполнялась; таблица FR появится в ней.
 
----
+## Документация
 
-## Архитектура
+- [Паспорт, команда, структура, карта функций, практики и план](docs/00-project.md).
+- [Протокол проверок](docs/lab-1-verification.md) и [порядок сдачи](docs/lab-1-submission.md).
+- [ML-сервис](ml/docs/ML_SERVICE.md), [существующие LikeC4-модели](architecture/README.md), [контракт логирования](docs/logging-contract.md).
+- [История изменений](CHANGELOG.md).
 
-Диаграммы **C1–C3** и сценарии (dynamic) в [LikeC4](https://likec4.dev/): [`architecture/`](./architecture/README.md) — `cd architecture && npm install && npm start`.
+## Устройство приложения
 
-Проект состоит из следующих компонентов:
+React SPA → Nginx → Spring Boot API. PostgreSQL хранит пользователей, конспекты и Outbox; MinIO — фотографии. RabbitMQ передаёт задания Python worker, который вызывает отдельно развёрнутую Ollama и возвращает результат. Frontend опрашивает состояние конспекта. Дополнительно предусмотрены метрики, трассировки, логи и кластерный режим.
 
-1. **Frontend (`/frontend`)**: React 19 (SPA) на Feature-Sliced Design (`app/pages/widgets/features/entities/shared`).
-2. **Backend (`/backend`)**: Spring Boot 3 (Java 24).
-   - **API Gateway**: REST API для клиента.
-   - **Reliability**: реализован паттерн **Transactional Outbox** для гарантии доставки событий (At-Least-Once).
-   - **Storage Management**: встроенный **Garbage Collector** для очистки S3 от «файлов-сирот».
-3. **ML Service (`/ml`)**: RabbitMQ worker — загрузка фото из MinIO, распознавание и суммаризация через **Ollama** (`qwen2.5vl:7b`), отправка результата в `notes.completed`.
-   - Подробнее: [`ml/docs/ML_SERVICE.md`](./ml/docs/ML_SERVICE.md).
-4. **Инфраструктура**:
-   - **PostgreSQL**: хранение пользователей, метаданных заметок и таблицы Outbox.
-   - **MinIO**: S3-совместимое хранилище оригиналов изображений.
-   - **RabbitMQ**: очередь сообщений (`notes.exchange` -> `notes.process.queue`).
+Код: `backend/src/main`, `frontend/src`, `ml`. Тесты находятся в соответствующих компонентах; корневые `src/` и `tests/` содержат навигацию и общий тестовый материал. Такое размещение согласуется с преподавателем без механического переноса рабочего кода.
 
-## Быстрый старт (Docker Compose)
+## Запуск
 
-### Предварительные требования
-- Docker и Docker Compose
+### Подготовка среды
 
-### Запуск
+Нужны Git, Windows PowerShell 5.1 или PowerShell 7, работающий Docker Desktop с Linux-контейнерами и Compose v2+. Для основного сценария нужны Ollama и загруженная vision-модель. Java, Node и Python на хост для Docker-запуска не требуются.
 
-1. Клонируйте репозиторий:
-   ```bash
-   git clone https://github.com/IWKMS99/Autonotes.git autonotes
-   cd autonotes
-   ```
+Подготовка выполняется один раз до запуска из клона. В проверяемой среде: Windows, около 32 ГиБ RAM, RTX 5070 12 ГиБ VRAM. Это описание машины проверки, а не установленный минимальный порог. Полный стек скачивает несколько гигабайт образов, модель 3b — около 3,2 ГБ. Оставьте запас диска и памяти. CPU-режим возможен, но отдельно не подтверждён и может быть медленным.
 
-2. Создайте `.env` файл (можно скопировать пример):
-   ```bash
-   cp .env.example .env
-   ```
+Вариант для NVIDIA GPU: отдельный официальный контейнер Ollama. На Windows требуется работающий GPU в Docker Desktop/WSL2. Подготовка:
 
-3. Запустите весь стек:
-   ```bash
-   docker compose up --build -d
-   ```
-
-По умолчанию запускается демо-режим с одним backend-инстансом (`backend-1`).
-
-Кластерный режим с балансировкой на 3 backend-инстанса:
-```bash
-COMPOSE_PROFILES=cluster NGINX_LB_CONFIG=./nginx/nginx.cluster.conf PROMETHEUS_SCRAPE_CONFIG=./monitoring/prometheus.cluster.yml docker compose up --build -d
+```powershell
+docker run -d --gpus all --name autonotes-lab1-ollama -v autonotes-lab1-ollama:/root/.ollama -p 127.0.0.1:11434:11434 ollama/ollama:0.40.17
+docker exec autonotes-lab1-ollama ollama pull qwen2.5vl:3b
 ```
 
-После запуска сервисы доступны по адресам:
-- **Frontend**: `http://localhost:3000`
-- **Backend API (через LB)**: `http://localhost:8090`
-- **Swagger UI (через LB)**: `http://localhost:8090/swagger-ui.html`
-- **MinIO Console**: `http://localhost:9001`
-- **RabbitMQ Console**: `http://localhost:15672`
+При повторном использовании уже созданного контейнера: `docker start autonotes-lab1-ollama`. Не выполнять повторно `docker run` с тем же именем. Если используется установленная Ollama, достаточно запущенного сервера и `ollama pull qwen2.5vl:3b`; его доступность из Docker проверит сценарий запуска.
 
-## Структура репозитория
+Для удалённой Ollama используйте собственный доступный адрес, например через Tailscale. Хост модели должен быть включён; доступ с вашей машины и из ML-контейнера обязателен. Подробности — в документации ML. Модель и fallback должны быть загружены; по умолчанию оба поля равны `qwen2.5vl:3b`, поэтому скрытая загрузка 7b не требуется.
 
-- [`backend/`](./backend/README.md) — исходный код сервера (Java 24, Spring Boot 3).
-- [`frontend/`](./frontend/README.md) — исходный код клиента (React 19).
-- `docker-compose.yml` — оркестрация сервисов.
+### Четыре команды из чистого клона
 
-## Использование удаленной Ollama через Tailscale
+После подготовки среды:
 
-Если модель запущена на другом ПК, можно поднимать проект локально и подключать ML-сервис к удаленной Ollama.
+```powershell
+git clone https://github.com/dmice9/Autonotes.git
+cd Autonotes
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\start.ps1 -OllamaBaseUrl http://host.docker.internal:11434 -OllamaModel qwen2.5vl:3b
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\smoke.ps1
+```
 
-1. В файле `.env` задайте `OLLAMA_BASE_URL`:
-   - `OLLAMA_BASE_URL=http://<TAILSCALE_IP_ХОСТА_OLLAMA>:11434`
-2. Выполните настройку и меры безопасности по инструкции:
-   - [`ml/docs/ML_SERVICE.md`](./ml/docs/ML_SERVICE.md) -> `Remote Ollama (Tailscale)`
+До слияния ЛР № 1 первая команда для проверки её ветки: `git clone --branch lab-1 https://github.com/dmice9/Autonotes.git`. После слияния используется обычная команда выше. В PowerShell 7 вместо `powershell` можно вызвать `pwsh`.
 
-Важно:
-- Модель скачивается и запускается только на ПК-хосте Ollama.
-- Другие ПК только обращаются к Ollama API через Tailscale.
+`ExecutionPolicy Bypass` действует только на дочерний процесс; глобальная политика не изменяется. Скрипт создаёт `.env`, если его нет, сохраняет существующие настройки и изменяет только явно переданные параметры. Проверяет Docker, конфигурацию, сборку и наличие моделей через реальный маршрут из ML-контейнера, затем ждёт готовности сервисов. Повторный запуск не удаляет данные.
 
-## Observability (E2E)
+Удалённый сервер задаётся параметром `-OllamaBaseUrl http://АДРЕС:11434`. Для другой изолированной базы можно передать `-ProjectName autonotes-clean`; одновременно два полных стека по умолчанию используют одинаковые порты, поэтому первый нужно остановить без удаления данных.
 
-После `docker compose up --build -d` доступны:
-- **Prometheus**: `http://localhost:9090`
-- **Grafana**: `http://localhost:3001` (`admin/admin`)
-- **Jaeger UI**: `http://localhost:16686`
-- **Kibana**: `http://localhost:5601`
+### Проверка вручную в три шага
 
-Provisioning выполняется автоматически:
-- Grafana datasource + dashboards из `monitoring/grafana/provisioning`.
-- Kibana data view `autonotes-logs-*` и базовый dashboard через `kibana-init`.
+1. Открыть `http://localhost:3000`, зарегистрироваться и войти.
+2. Создать конспект с названием и файлом `tests/fixtures/lecture.png`.
+3. Дождаться состояния «Готов», проверить текст про database transactions и осмысленное краткое содержание; повторно открыть конспект из списка.
 
-### Smoke-check
-1. Скопируйте env: `cp .env.example .env`.
-2. Поднимите стек: `docker compose up --build -d`.
-3. Сгенерируйте трафик: `curl http://localhost:8090/api/v1/system/info` (несколько раз).
-4. Проверьте:
-   - Prometheus targets `autonotes-backend` и `nginx-lb` в состоянии `UP`.
-   - Grafana dashboards `Autonotes JVM & Health` и `Autonotes HTTP Overview`.
-   - Jaeger traces для backend.
-   - Kibana index/data view `autonotes-logs-*` с полями `traceId/spanId`.
+`/health` подтверждает доступность компонентов, но не качество OCR. Автоматический `smoke.ps1` дополнительно проверяет регистрацию, вход, свой профиль, запрет доступа без авторизации, реальный OCR и суммаризацию, список, недоступность записи другому пользователю и удаление своей записи. Нормальный результат — все строки PASS и `passed: true` в `artifacts/lab-1/smoke.json`.
 
-### Prometheus/Grafana checks
-1. Примеры запросов Prometheus:
-   - `up{job="autonotes-backend"}`
-   - `http_server_requests_seconds_count`
-   - `http_server_requests_seconds_bucket`
-   - `jvm_memory_used_bytes`
-   - `hikaricp_connections_active`
-2. Grafana dashboards должны загружаться автоматически из `monitoring/grafana/dashboards`.
-3. Если `p95 Latency` или `5xx Error Ratio` пустые, сгенерируйте трафик на:
-   - `GET /api/v1/system/info`
-   - `POST /api/v1/auth/login`
-   - `GET /api/v1/notes`
-4. Для cluster-режима используйте:
-   `COMPOSE_PROFILES=cluster NGINX_LB_CONFIG=./nginx/nginx.cluster.conf PROMETHEUS_SCRAPE_CONFIG=./monitoring/prometheus.cluster.yml docker compose up --build -d`
+Скрипт ждёт обработку до 600 секунд; параметр `-TimeoutSec` меняет предел. При FAILED/таймауте возвращается ошибка. Каждый прогон создаёт уникальные технические аккаунты; их пароли и токены в отчёт не попадают. Удаляется только созданный тестовый конспект. Отчёты и `.env` исключены из git.
+
+### Адреса
+
+| Сервис | Адрес |
+|---|---|
+| Приложение | http://localhost:3000 |
+| Backend | http://localhost:8090 |
+| Swagger | http://localhost:8090/swagger-ui.html |
+| ML health | http://localhost:8000/health |
+| MinIO console | http://localhost:9001 |
+| RabbitMQ console | http://localhost:15672 |
+| Prometheus | http://localhost:9090 |
+| Grafana | http://localhost:3001 |
+| Jaeger | http://localhost:16686 |
+| Kibana | http://localhost:5601 |
+
+Пароли шаблона предназначены для локальной учебной среды. Нельзя публиковать реальный `.env` и JWT. Docker frontend использует `/api/v1`; адрес в `.env.example` предназначен также для локальной разработки React через порт 8090.
+
+### Диагностика и остановка
+
+```powershell
+docker compose --project-name autonotes ps
+docker compose --project-name autonotes logs --tail 100 backend-1 ml
+docker compose --project-name autonotes down
+```
+
+`down` без `--volumes` сохраняет данные. Не удаляйте volumes работающих проектов. Если Engine недоступен, запустите Docker Desktop. Если модель не найдена — выполните её pull; если недоступна сеть — проверьте URL и настройки хоста. При ошибке сборки сохраните первую причину, а не только итоговый exit code. Нерешённые проблемы оформляются в issues.
+
+### Версии
+
+| Инструмент | Конфигурация |
+|---|---|
+| Java / Spring Boot / Gradle | 24 / 3.5.7 / Wrapper 8.14.3 |
+| Node.js / React | 22 / 19; точное дерево npm в package-lock.json |
+| Python | 3.12 в контейнере; точные пакеты в ml/requirements.txt |
+| Ollama / модель | 0.40.17 / qwen2.5vl:3b |
+| Docker / Compose машины проверки | 29.9.3 / v5.7.0 |
+
+Базовые образы зафиксированы в Dockerfile, инфраструктурные — в Compose. Конкретные результаты и ограничения приведены в протоколе; поддержка других версий без проверки не заявляется.
+
+### Протокол повторного запуска
+
+На 23.11.2026 подготовку выполняет Codex в сессии Артура на Windows. Текущие результаты — в [протоколе](docs/lab-1-verification.md). Другой участник ещё не подтвердил самостоятельный запуск. После проверки он добавляет дату, ОС, своё имя, коммит, версии и результат. Автоматический прогон в чистой среде записывается отдельно и не выдаётся за проверку Павла или Даниила.
+
+## Инженерные проверки
+
+В подготовленной среде соответствующего компонента:
+
+- Backend: `cd backend`, затем `./gradlew build` (Windows: `gradlew.bat build`); интеграционные тесты требуют Docker.
+- Frontend: `cd frontend`, `npm ci`, `npm test -- --watchAll=false`, `npm run build`.
+- ML: `python -m pip install -r ml/requirements.txt`, `python -m pytest ml/tests -q`.
+
+GitHub Actions запускает существующие проверки. Unit-тесты ML используют mock модели; они не заменяют E2E с реальной Ollama. Фактические результаты CI должны проверяться в конкретном PR.
+
+## Git и синхронизация исходного репозитория
+
+Основная ветка — `main`. Каждая лабораторная выполняется в `lab-N`, включается через PR и после завершения получает тег `lab-N`. Каждый участник использует собственную авторизацию и автора коммитов. Итоговые согласования преподавателя остаются в product.
+
+`origin` — `https://github.com/dmice9/Autonotes.git`; `upstream` — `https://github.com/IWKMS99/Autonotes.git`. Для получения изменений исходного проекта:
+
+```powershell
+git remote add upstream https://github.com/IWKMS99/Autonotes.git
+git fetch upstream
+git switch -c sync-upstream origin/main
+git merge upstream/master
+```
+
+Добавление remote выполняется один раз. Затем разрешить возможные конфликты, выполнить проверки, отправить ветку и открыть PR в main. Исходная ветка upstream на момент подготовки называется master; не переименовывать чужой репозиторий. Прямое обновление защищённой main не используется.
+
+## Дополнительные возможности
+
+Исходный Compose содержит кластерный профиль из трёх backend и конфигурации Nginx/Prometheus; это дополнительный режим вне основного сценария ЛР № 1. LikeC4: в `architecture/` выполнить `npm ci` и `npm start`. Эти действия не входят в четыре команды запуска приложения.
+
+## Лицензия
+
+Выбор лицензии открыт по решению команды. Отсутствующую лицензию нельзя считать MIT автоматически. Вопрос фиксируется в паспорте и issue; пункт LICENSE остаётся незавершённым до решения авторов.
