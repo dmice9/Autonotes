@@ -34,7 +34,9 @@ public abstract class BaseIntegrationTest {
     static class Initializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
 
         static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(DockerImageName.parse("postgres:16-alpine"));
-        static MinIOContainer minio = new MinIOContainer("minio/minio:RELEASE.2025-09-07T16-13-09Z-cpuv1");
+        static MinIOContainer minio =
+                new MinIOContainer(DockerImageName.parse("autonotes-minio:RELEASE.2025-09-07T16-13-09Z")
+                        .asCompatibleSubstituteFor("minio/minio"));
         static RabbitMQContainer rabbit =
                 new RabbitMQContainer(DockerImageName.parse("rabbitmq:3.12-management-alpine"));
 

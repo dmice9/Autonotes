@@ -1,9 +1,9 @@
 name: Backend CI (Java/Gradle)
 on:
   pull_request:
-    branches: [ "master" ]
+    branches: [ "main" ]
   push:
-    branches: [ "master" ]
+    branches: [ "main" ]
 permissions:
   contents: read
   pull-requests: write
@@ -27,6 +27,9 @@ jobs:
           cache: 'gradle'
       - name: Make gradlew executable
         run: chmod +x gradlew
+      - name: Build reproducible MinIO test image
+        working-directory: .
+        run: docker build -t autonotes-minio:RELEASE.2025-09-07T16-13-09Z infrastructure/minio
       - name: Build & run tests
         run: ./gradlew build --no-daemon --info
       - name: Publish Test Report

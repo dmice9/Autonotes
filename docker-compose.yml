@@ -53,7 +53,7 @@ x-backend-common: &backend-common
 
 services:
   db:
-    image: postgres:16-alpine
+    image: postgres:16-alpine@sha256:f2f98726820d0342055351c6e9d36e705f5bfffb3dd53ff556325114b08afb6d
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -69,7 +69,9 @@ services:
       retries: 5
 
   minio:
-    image: minio/minio:RELEASE.2025-09-07T16-13-09Z-cpuv1
+    image: autonotes-minio:RELEASE.2025-09-07T16-13-09Z
+    build: ./infrastructure/minio
+    platform: linux/amd64
     ports:
       - "${MINIO_API_PORT}:9000"
       - "${MINIO_CONSOLE_PORT}:9001"
@@ -86,7 +88,7 @@ services:
       retries: 5
 
   rabbitmq:
-    image: rabbitmq:3.13-management-alpine
+    image: rabbitmq:3.13-management-alpine@sha256:606d8c0d6b3c18d1da9afc53bc7cdb2a8d5486df91b5a9830e9e07626c9ae281
     ports:
       - "${RABBITMQ_PORT}:5672"
       - "${RABBITMQ_CONSOLE_PORT}:15672"
@@ -102,7 +104,7 @@ services:
       retries: 10
 
   jaeger:
-    image: jaegertracing/all-in-one:1.60.0
+    image: jaegertracing/all-in-one:1.60.0@sha256:4fd2d70fa347d6a47e79fcb06b1c177e6079f92cba88b083153d56263082135e
     restart: unless-stopped
     ports:
       - "${JAEGER_UI_PORT}:16686"
@@ -118,7 +120,7 @@ services:
       retries: 10
 
   prometheus:
-    image: prom/prometheus:v2.53.3
+    image: prom/prometheus:v2.53.3@sha256:c62e2f333beae2fdac8c3c7a3daaa7ac81110023cbc5857b0ec541f09d997951
     volumes:
       - ${PROMETHEUS_SCRAPE_CONFIG:-./monitoring/prometheus.single.yml}:/etc/prometheus/prometheus.yml:ro
     command:
@@ -133,7 +135,7 @@ services:
     restart: unless-stopped
 
   grafana:
-    image: grafana/grafana:11.1.0
+    image: grafana/grafana:11.1.0@sha256:079600c9517b678c10cda6006b4487d3174512fd4c6cface37df7822756ed7a5
     ports:
       - "${GRAFANA_PORT}:3000"
     environment:
@@ -153,7 +155,7 @@ services:
     restart: unless-stopped
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0@sha256:84a73ced8390c059e7bc2858595c68dc36e6f8bdb98895dcab0074eda35ac96e
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
@@ -171,7 +173,7 @@ services:
       retries: 20
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:8.15.0
+    image: docker.elastic.co/logstash/logstash:8.15.0@sha256:73a30fb57f305c0a6e0018ef37aeda016b5a3578a95530af13579382938cc3d6
     volumes:
       - ./logging/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
     environment:
@@ -186,7 +188,7 @@ services:
       retries: 15
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:8.15.0
+    image: docker.elastic.co/kibana/kibana:8.15.0@sha256:ff5f6b9a49f410658b74b337b102c302bbeb52b470efe1f0e3af3c7526fbe0e7
     ports:
       - "${KIBANA_PORT}:5601"
     environment:
@@ -201,7 +203,7 @@ services:
       retries: 20
 
   kibana-init:
-    image: curlimages/curl:8.8.0
+    image: curlimages/curl:8.8.0@sha256:73e4d532ea62d7505c5865b517d3704966ffe916609bedc22af6833dc9969bcd
     depends_on:
       kibana:
         condition: service_healthy
@@ -212,7 +214,7 @@ services:
     restart: "no"
 
   filebeat:
-    image: docker.elastic.co/beats/filebeat:8.15.0
+    image: docker.elastic.co/beats/filebeat:8.15.0@sha256:c2cb458cba1eff0536639f7f101d8ddf570a4cf1973ed79d95db243077a39e7c
     user: root
     privileged: true
     volumes:
@@ -224,7 +226,7 @@ services:
       logstash:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "filebeat test output -e | grep -q 'Connection to backoff(async(tcp://logstash:5044)) established'"]
+      test: ["CMD-SHELL", "filebeat test output -e --strict.perms=false >/dev/null 2>&1"]
       interval: 30s
       timeout: 15s
       retries: 6
@@ -256,7 +258,7 @@ services:
       - "8083:8080"
 
   nginx-lb:
-    image: nginx:alpine
+    image: nginx:alpine@sha256:fb4658584bd9a916ffb6f6e365f97c25cfdb2923801f551ea08356e695f14ff7
     ports:
       - "${APP_PORT}:80"
     volumes:
@@ -266,7 +268,7 @@ services:
         condition: service_healthy
 
   nginx-prometheus-exporter:
-    image: nginx/nginx-prometheus-exporter:1.3.0
+    image: nginx/nginx-prometheus-exporter:1.3.0@sha256:6477cf3bddc4e042d3496856fb2e8e382301bac47fb18cb83924389717261cb1
     command:
       - -nginx.scrape-uri=http://nginx-lb:80/stub_status
     depends_on:

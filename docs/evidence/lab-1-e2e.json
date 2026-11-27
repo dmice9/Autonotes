@@ -1,0 +1,56 @@
+{
+    "startedAt":  "2026-11-23T01:04:28.1987413+03:00",
+    "baseUrl":  "http://localhost:8090",
+    "passed":  true,
+    "checks":  [
+                   {
+                       "name":  "backend readiness",
+                       "passed":  true
+                   },
+                   {
+                       "name":  "system info",
+                       "passed":  true
+                   },
+                   {
+                       "name":  "registration",
+                       "passed":  true
+                   },
+                   {
+                       "name":  "login",
+                       "passed":  true
+                   },
+                   {
+                       "name":  "unauthenticated notes access rejected",
+                       "passed":  true
+                   },
+                   {
+                       "name":  "own profile",
+                       "passed":  true
+                   },
+                   {
+                       "name":  "image upload",
+                       "passed":  true
+                   },
+                   {
+                       "name":  "real OCR and summary completed",
+                       "passed":  true
+                   },
+                   {
+                       "name":  "note listed",
+                       "passed":  true
+                   },
+                   {
+                       "name":  "other user cannot read note",
+                       "passed":  true
+                   },
+                   {
+                       "name":  "own note deleted",
+                       "passed":  true
+                   }
+               ],
+    "noteId":  1,
+    "processingSeconds":  18.19,
+    "recognizedText":  "## DATABASE TRANSACTIONS\n\nA transaction groups several database operations.\n\nAtomicity means all operations succeed or none do.\n\nConsistency preserves the rules of the database.\n\nIsolation separates concurrent transactions.\n\nDurability keeps committed changes after restart.\n\nCOMMIT saves changes. ROLLBACK cancels changes.",
+    "summaryText":  "### Ключевые идеи\n\n- **Транзакции**: Группируют несколько операций базы данных.\n- **Атомичность**: Все операции успешны или ни одна не успешна.\n- **Синхронизация**: Сохраняет правила базы данных.\n- **Изоляция**: Разделяет одновременные транзакции.\n- **Дисперсность**: Запоминает выполненные изменения после перезапуска.\n- **COMMIT**: Сохраняет изменения.\n- **ROLLBACK**: Отменяет изменения.\n\n### Выводы\n\nТранзакции включают в себя атомичность, синхронизацию, изоляцию, дисперсность, COMMIT и ROLLBACK.",
+    "finishedAt":  "2026-11-23T01:04:47.4150882+03:00"
+}
